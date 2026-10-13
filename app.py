@@ -1,202 +1,371 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
+import io
 import matplotlib.pyplot as plt
-import seaborn as sns
+import numpy as np
+import pandas as pd
 import plotly.express as px
-from sklearn.impute import KNNImputer
-from sklearn.preprocessing import StandardScaler
+import seaborn as sns
+import streamlit as st
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
+from sklearn.impute import KNNImputer
+from sklearn.metrics import (
+    calinski_harabasz_score,
+    davies_bouldin_score,
+    silhouette_score,
+)
+from sklearn.preprocessing import StandardScaler
 
-st.set_page_config(page_title="Painel Educacional - Fundamental 2", layout="wide")
-st.title("Painel de Segmentação Escolar (K-Means)")
+st.set_page_config(
+    page_title="Painel Educacional de Agrupamento", layout="wide"
+)
+st.title("Sistema Adaptativo de Agrupamento de Estudantes (K-Means)")
 
-# 1. Controles na Barra Lateral: Ano, Etapa e K
-st.sidebar.header("Seleção de Filtros")
+# ---------------------------------------------------------
+# 1. CARREGAMENTO DINÂMICO DE DADOS
+# ---------------------------------------------------------
+st.sidebar.header("1. Fonte dos Dados")
 
-# Seletor do Ano Letivo
-anos_disponiveis = [2025, 2024, 2023]
-ano_escolhido = st.sidebar.selectbox("Escolha o Ano Letivo:", anos_disponiveis)
+arquivo_carregado = st.sidebar.file_uploader(
+    "Envie a planilha da escola (.xlsx ou .csv):", type=["xlsx", "csv"]
+)
 
-# Seletor da Etapa
-etapa_opcoes = {
-    "6º ano": 6,
-    "7º ano": 7,
-    "8º ano": 8,
-    "9º ano": 9
-}
-etapa_nome = st.sidebar.selectbox("Escolha a Etapa:", list(etapa_opcoes.keys()))
-etapa_valor = etapa_opcoes[etapa_nome]
 
-# Seletor de Clusters
-k_escolhido = st.sidebar.slider("Quantidade de clusters (k):", min_value=2, max_value=5, value=3, step=1)
-st.sidebar.info(f"Filtro ativo: **{ano_escolhido}** | **{etapa_nome}** | **k = {k_escolhido}**")
-
-# 2. Carregamento e Processamento Parametrizado por (Ano, Etapa)
 @st.cache_data
-def carregar_e_processar(ano, etapa):
-    caminho = 'Dados Fundamental 2 Limpos 2023, 2024 e 2025.xlsx'
-    df_completo = pd.read_excel(caminho).dropna(how='all')
+def carregar_dados(uploaded_file):
+    try:
+        if uploaded_file is not None:
+            if uploaded_file.name.endswith(".csv"):
+                df = pd.read_csv(uploaded_file)
+            else:
+                df = pd.read_excel(uploaded_file)
+        else:
+            # Fallback para a base padrão
+            caminho_padrao = "Dados Fundamental 2 Limpos 2023, 2024 e 2025.xlsx"
+            df = pd.read_excel(caminho_padrao)
+        return df.dropna(how="all")
+    except Exception as e:
+        st.error(
+            f"Erro ao ler a base de dados: {e}. Verifique o formato do arquivo."
+        )
+        return None
 
-    # Filtra simultaneamente por Ano e por Etapa_1
-    df = df_completo[(df_completo['Ano'] == ano) & (df_completo['Etapa_1'] == etapa)].copy()
 
-    # As 22 variáveis padronizadas do treinamento
-    features_treino = [
-        'Transporte_1', 'BF_1', 'M_Leitura', 'M_Registro', 'M_Gênero', 'M_Coecoesão',
-        'M_Português', 'F_Português', 'M_Matemática', 'F_Matemática', 'M_Ciências', 'F_Ciências',
-        'M_História', 'F_História', 'M_Geografia', 'F_Geografia', 'M_Arte', 'F_Arte',
-        'M_EdFísica', 'F_EdFísica', 'M_Inglês', 'F_Inglês'
+df_raw = carregar_dados(arquivo_carregado)
+
+if df_raw is not None and not df_raw.empty:
+
+    # ---------------------------------------------------------
+    # 2. CONFIGURAÇÃO DINÂMICA DE FILTROS E VARIÁVEIS
+    # ---------------------------------------------------------
+    st.sidebar.header("2. Filtros e Configurações")
+
+    # Detecção automática de colunas
+    todas_colunas = df_raw.columns.tolist()
+    colunas_numericas = df_raw.select_dtypes(include=["number"]).columns.tolist()
+
+    # Seleção de Filtros (Ano / Etapa / Série)
+    coluna_ano = st.sidebar.selectbox(
+        "Coluna de Ano/Temporal (opcional):",
+        options=["Nenhum"] + todas_colunas,
+        index=todas_colunas.index("Ano") + 1 if "Ano" in todas_colunas else 0,
+    )
+
+    coluna_etapa = st.sidebar.selectbox(
+        "Coluna de Etapa/Série (opcional):",
+        options=["Nenhum"] + todas_colunas,
+        index=todas_colunas.index("Etapa_1") + 1
+        if "Etapa_1" in todas_colunas
+        else 0,
+    )
+
+    # Filtragem dos Dados
+    df_filtrado = df_raw.copy()
+
+    if coluna_ano != "Nenhum":
+        anos_unicos = sorted(df_raw[coluna_ano].dropna().unique())
+        ano_sel = st.sidebar.selectbox("Selecione o Ano:", anos_unicos)
+        df_filtrado = df_filtrado[df_filtrado[coluna_ano] == ano_sel]
+
+    if coluna_etapa != "Nenhum":
+        etapas_unicas = sorted(df_filtrado[coluna_etapa].dropna().unique())
+        etapa_sel = st.sidebar.selectbox("Selecione a Etapa:", etapas_unicas)
+        df_filtrado = df_filtrado[df_filtrado[coluna_etapa] == etapa_sel]
+
+    # Identificador do Aluno
+    coluna_id = st.sidebar.selectbox(
+        "Coluna de Identificação do Aluno (ex: Matrícula):",
+        options=todas_colunas,
+        index=todas_colunas.index("Matrícula")
+        if "Matrícula" in todas_colunas
+        else 0,
+    )
+
+    # Seleção das Features para Clusterização
+    colunas_excluir_padrao = [
+        coluna_id,
+        coluna_ano,
+        coluna_etapa,
+        "Média Global",
+        "Faltas Médias",
+    ]
+    features_sugeridas = [
+        c for c in colunas_numericas if c not in colunas_excluir_padrao
     ]
 
-    # Mantém apenas as features que estão presentes na base
-    features_treino = [f for f in features_treino if f in df.columns]
-
-    # Imputação KNN (k=5)
-    imputer = KNNImputer(n_neighbors=5)
-    df[features_treino] = imputer.fit_transform(df[features_treino])
-
-    # Padronização
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(df[features_treino])
-
-    # Curva do Cotovelo para o subgrupo filtrado
-    wcss = []
-    for i in range(1, 11):
-        km = KMeans(n_clusters=i, init='k-means++', n_init=10, random_state=42)
-        km.fit(X_scaled)
-        wcss.append(km.inertia_)
-
-    # Tabela comparativa de validação (k=2 a 5)
-    metricas = []
-    for k_val in range(2, 6):
-        km = KMeans(n_clusters=k_val, init='k-means++', n_init=25, max_iter=500, tol=0.00005, random_state=42)
-        labels = km.fit_predict(X_scaled)
-        metricas.append({
-            'k': k_val,
-            'Silhouette (↑)': round(silhouette_score(X_scaled, labels), 3),
-            'Davies-Bouldin (↓)': round(davies_bouldin_score(X_scaled, labels), 3),
-            'Calinski-Harabasz (↑)': round(calinski_harabasz_score(X_scaled, labels), 1)
-        })
-    tabela_validacao = pd.DataFrame(metricas)
-
-    return df, X_scaled, wcss, tabela_validacao, features_treino
-
-# Executa para o corte (Ano, Etapa) selecionado
-dados_filtrados, X_scaled, wcss, tabela_validacao, features_treino = carregar_e_processar(ano_escolhido, etapa_valor)
-
-# 3. Treina o K-Means com o k selecionado
-kmeans = KMeans(n_clusters=k_escolhido, init='k-means++', n_init=25, max_iter=500, tol=0.00005, random_state=42)
-dados_filtrados['Grupo'] = kmeans.fit_predict(X_scaled)
-
-# 4. Tabela de Agregação por Perfil
-dict_agg = {col: 'mean' for col in features_treino}
-if 'Média Global' in dados_filtrados.columns:
-    dict_agg['Média Global'] = 'mean'
-if 'Faltas Médias' in dados_filtrados.columns:
-    dict_agg['Faltas Médias'] = 'mean'
-if 'Matrícula' in dados_filtrados.columns:
-    dict_agg['Matrícula'] = 'count'
-
-analise_perfis = dados_filtrados.groupby('Grupo').agg(dict_agg)
-if 'Matrícula' in analise_perfis.columns:
-    analise_perfis = analise_perfis.rename(columns={'Matrícula': 'Qtd_Alunos'})
-
-# 5. Estrutura nas 5 Abas solicitadas
-aba_decisao, aba_heatmap, aba_perfis, aba_dispersao, aba_estudantes = st.tabs([
-    "1. Decisão do K (Métricas & Cotovelo)",
-    f"2. Mapa de Calor ({etapa_nome} - {ano_escolhido})",
-    f"3. Resumo dos Perfis ({etapa_nome} - {ano_escolhido})",
-    f"4. Gráfico de Dispersão ({etapa_nome} - {ano_escolhido})",
-    f"5. Consulta de Estudantes ({etapa_nome} - {ano_escolhido})"
-])
-
-# --- ABA 1: Decisão do K ---
-with aba_decisao:
-    st.subheader(f"Validação Estatística - {etapa_nome} de {ano_escolhido}")
-    col_g, col_t = st.columns([1.2, 1])
-    with col_g:
-        st.markdown("**Método do Cotovelo (WCSS)**")
-        fig_cotovelo, ax_cotovelo = plt.subplots(figsize=(6, 4))
-        ax_cotovelo.plot(range(1, 11), wcss, marker='o', color='steelblue')
-        ax_cotovelo.axvline(x=k_escolhido, color='crimson', linestyle='--', label=f'k Selecionado ({k_escolhido})')
-        ax_cotovelo.set_xlabel('Número de Grupos (k)')
-        ax_cotovelo.set_ylabel('Inércia Amostral')
-        ax_cotovelo.legend()
-        st.pyplot(fig_cotovelo)
-    with col_t:
-        st.markdown("**Comparativo de Índices**")
-        st.dataframe(tabela_validacao, use_container_width=True, hide_index=True)
-
-# --- ABA 2: Mapa de Calor (Matriz Completa) ---
-with aba_heatmap:
-    st.subheader(f"Matriz de Correlação Completa - {etapa_nome} ({ano_escolhido})")
-
-    colunas_interesse = [
-        'Transporte_1', 'BF_1', 'M_Leitura', 'M_Registro', 'M_Gênero', 'M_Coecoesão',
-        'M_Português', 'F_Português', 'M_Matemática', 'F_Matemática', 'M_Ciências', 'F_Ciências',
-        'M_História', 'F_História', 'M_Geografia', 'F_Geografia', 'M_Arte', 'F_Arte',
-        'M_EdFísica', 'F_EdFísica', 'M_Inglês', 'F_Inglês', 'Média Global', 'Faltas Médias'
-    ]
-    cols_heatmap = [col for col in colunas_interesse if col in dados_filtrados.columns]
-
-    matriz_corr = dados_filtrados[cols_heatmap].corr()
-
-    # Plot da matriz completa (sem máscara para visualização total)
-    fig_heat, ax_heat = plt.subplots(figsize=(16, 12))
-    sns.heatmap(
-        matriz_corr,
-        annot=True,
-        fmt='.2f',
-        cmap='coolwarm',
-        vmin=-1,
-        vmax=1,
-        linewidths=0.5,
-        cbar_kws={'shrink': 0.8},
-        ax=ax_heat
-    )
-    ax_heat.set_title(f'Mapa de Calor Completo - {etapa_nome} ({ano_escolhido})', fontsize=16, pad=15)
-    plt.xticks(rotation=45, ha='right')
-    plt.yticks(rotation=0)
-    plt.tight_layout()
-    st.pyplot(fig_heat)
-
-# --- ABA 3: Resumo dos Perfis ---
-with aba_perfis:
-    st.subheader(f"Médias das Variáveis por Perfil (k = {k_escolhido})")
-    st.dataframe(analise_perfis.style.format("{:.2f}"), use_container_width=True)
-
-# --- ABA 4: Gráfico de Dispersão Interativo (Plotly) ---
-with aba_dispersao:
-    st.subheader(f"Dispersão dos Estudantes por Perfil - {etapa_nome} ({ano_escolhido})")
-
-    dados_filtrados['Grupo_Rotulo'] = 'Grupo ' + dados_filtrados['Grupo'].astype(str)
-
-    fig_disp = px.scatter(
-        dados_filtrados,
-        x='Média Global',
-        y='Faltas Médias',
-        color='Grupo_Rotulo',
-        hover_data=['Matrícula'],
-        title=f'Perfis de Alunos - {etapa_nome} ({ano_escolhido})',
-        symbol='Grupo_Rotulo'
+    features_selecionadas = st.sidebar.multiselect(
+        "Selecione as variáveis para o agrupamento:",
+        options=colunas_numericas,
+        default=features_sugeridas
+        if len(features_sugeridas) > 0
+        else colunas_numericas,
     )
 
-    fig_disp.update_layout(
-        xaxis_title="Média Global",
-        yaxis_title="Faltas Médias",
-        legend_title="Grupos"
+    k_escolhido = st.sidebar.slider(
+        "Quantidade de clusters (k):",
+        min_value=2,
+        max_value=6,
+        value=3,
+        step=1,
     )
 
-    st.plotly_chart(fig_disp, use_container_width=True)
+    # ---------------------------------------------------------
+    # 3. VALIDAÇÕES E PROCESSAMENTO DOS DADOS
+    # ---------------------------------------------------------
+    if len(df_filtrado) < k_escolhido:
+        st.warning(
+            f"A quantidade de alunos filtrados ({len(df_filtrado)}) é menor que o número de clusters 'k' ({k_escolhido}). Reduza o valor de k ou ajuste os filtros."
+        )
+    elif len(features_selecionadas) < 2:
+        st.warning(
+            "Selecione pelo menos 2 variáveis numéricas na barra lateral para realizar o agrupamento."
+        )
+    else:
+        try:
+            # Imputação e Padronização
+            imputer = KNNImputer(n_neighbors=min(5, len(df_filtrado)))
+            df_imputado = df_filtrado.copy()
+            df_imputado[features_selecionadas] = imputer.fit_transform(
+                df_filtrado[features_selecionadas]
+            )
 
-# --- ABA 5: Consulta de Alunos ---
-with aba_estudantes:
-    st.subheader(f"Lista de Estudantes - {etapa_nome} ({ano_escolhido})")
-    grupo_filtro = st.selectbox("Selecione o Grupo:", options=sorted(dados_filtrados['Grupo'].unique()))
-    alunos_filtrados = dados_filtrados[dados_filtrados['Grupo'] == grupo_filtro]
+            scaler = StandardScaler()
+            X_scaled = scaler.fit_transform(df_imputado[features_selecionadas])
 
-    cols_mostrar = [c for c in ['Matrícula', 'Média Global', 'Faltas Médias', 'Grupo'] if c in dados_filtrados.columns]
-    st.write(f"Total de **{len(alunos_filtrados)}** estudantes alocados no Grupo {grupo_filtro}:")
-    st.dataframe(alunos_filtrados[cols_mostrar], use_container_width=True)
+            # Cálculo prévio do Cotovelo e Validação
+            max_k_possible = min(10, len(df_filtrado) - 1)
+            wcss = []
+            for i in range(1, max_k_possible + 1):
+                km = KMeans(
+                    n_clusters=i, init="k-means++", n_init=10, random_state=42
+                )
+                km.fit(X_scaled)
+                wcss.append(km.inertia_)
+
+            metricas = []
+            for k_val in range(2, min(6, len(df_filtrado))):
+                km = KMeans(
+                    n_clusters=k_val,
+                    init="k-means++",
+                    n_init=25,
+                    max_iter=500,
+                    tol=0.00005,
+                    random_state=42,
+                )
+                labels = km.fit_predict(X_scaled)
+                metricas.append(
+                    {
+                        "k": k_val,
+                        "Silhouette (↑)": round(
+                            silhouette_score(X_scaled, labels), 3
+                        ),
+                        "Davies-Bouldin (↓)": round(
+                            davies_bouldin_score(X_scaled, labels), 3
+                        ),
+                        "Calinski-Harabasz (↑)": round(
+                            calinski_harabasz_score(X_scaled, labels), 1
+                        ),
+                    }
+                )
+            tabela_validacao = pd.DataFrame(metricas)
+
+            # Modelo Final com k escolhido
+            kmeans = KMeans(
+                n_clusters=k_escolhido,
+                init="k-means++",
+                n_init=25,
+                max_iter=500,
+                tol=0.00005,
+                random_state=42,
+            )
+            df_imputado["Grupo"] = kmeans.fit_predict(X_scaled)
+            df_imputado["Grupo_Rotulo"] = "Grupo " + df_imputado[
+                "Grupo"
+            ].astype(str)
+
+            # Tabela de Perfis
+            dict_agg = {col: "mean" for col in features_selecionadas}
+            if "Média Global" in df_imputado.columns:
+                dict_agg["Média Global"] = "mean"
+            if "Faltas Médias" in df_imputado.columns:
+                dict_agg["Faltas Médias"] = "mean"
+            dict_agg[coluna_id] = "count"
+
+            analise_perfis = df_imputado.groupby("Grupo").agg(dict_agg)
+            analise_perfis = analise_perfis.rename(
+                columns={coluna_id: "Qtd_Alunos"}
+            )
+
+            # ---------------------------------------------------------
+            # 4. ESTRUTURA EM ABAS
+            # ---------------------------------------------------------
+            aba_decisao, aba_heatmap, aba_perfis, aba_dispersao, aba_estudantes = (
+                st.tabs(
+                    [
+                        "1. Decisão do K",
+                        "2. Mapa de Calor",
+                        "3. Resumo dos Perfis",
+                        "4. Gráfico de Dispersão",
+                        "5. Consulta & Exportação",
+                    ]
+                )
+            )
+
+            # Aba 1: Métricas & Cotovelo
+            with aba_decisao:
+                st.subheader("Validação Estatística para Escolha do K")
+                col_g, col_t = st.columns([1.2, 1])
+                with col_g:
+                    st.markdown("**Método do Cotovelo (WCSS)**")
+                    fig_cotovelo, ax_cotovelo = plt.subplots(figsize=(6, 4))
+                    ax_cotovelo.plot(
+                        range(1, len(wcss) + 1),
+                        wcss,
+                        marker="o",
+                        color="steelblue",
+                    )
+                    ax_cotovelo.axvline(
+                        x=k_escolhido,
+                        color="crimson",
+                        linestyle="--",
+                        label=f"k Selecionado ({k_escolhido})",
+                    )
+                    ax_cotovelo.set_xlabel("Número de Grupos (k)")
+                    ax_cotovelo.set_ylabel("Inércia Amostral")
+                    ax_cotovelo.legend()
+                    st.pyplot(fig_cotovelo)
+                with col_t:
+                    st.markdown("**Comparativo de Índices**")
+                    st.dataframe(
+                        tabela_validacao,
+                        use_container_width=True,
+                        hide_index=True,
+                    )
+
+            # Aba 2: Mapa de Calor
+            with aba_heatmap:
+                st.subheader("Matriz de Correlação Completa das Variáveis")
+                matriz_corr = df_imputado[features_selecionadas].corr()
+                fig_heat, ax_heat = plt.subplots(
+                    figsize=(min(16, len(features_selecionadas)), 10)
+                )
+                sns.heatmap(
+                    matriz_corr,
+                    annot=True,
+                    fmt=".2f",
+                    cmap="coolwarm",
+                    vmin=-1,
+                    vmax=1,
+                    linewidths=0.5,
+                    cbar_kws={"shrink": 0.8},
+                    ax=ax_heat,
+                )
+                plt.xticks(rotation=45, ha="right")
+                plt.yticks(rotation=0)
+                plt.tight_layout()
+                st.pyplot(fig_heat)
+
+            # Aba 3: Perfis
+            with aba_perfis:
+                st.subheader(f"Médias das Variáveis por Perfil (k = {k_escolhido})")
+                st.dataframe(
+                    analise_perfis.style.format("{:.2f}"),
+                    use_container_width=True,
+                )
+
+            # Aba 4: Dispersão
+            with aba_dispersao:
+                st.subheader("Gráfico de Dispersão dos Estudantes")
+                eixo_x = st.selectbox(
+                    "Selecione a variável para o Eixo X:",
+                    options=colunas_numericas,
+                    index=colunas_numericas.index("Média Global")
+                    if "Média Global" in colunas_numericas
+                    else 0,
+                )
+                eixo_y = st.selectbox(
+                    "Selecione a variável para o Eixo Y:",
+                    options=colunas_numericas,
+                    index=colunas_numericas.index("Faltas Médias")
+                    if "Faltas Médias" in colunas_numericas
+                    else min(1, len(colunas_numericas) - 1),
+                )
+
+                fig_disp = px.scatter(
+                    df_imputado,
+                    x=eixo_x,
+                    y=eixo_y,
+                    color="Grupo_Rotulo",
+                    hover_data=[coluna_id],
+                    title=f"Perfis de Alunos ({eixo_x} vs {eixo_y})",
+                    symbol="Grupo_Rotulo",
+                )
+                st.plotly_chart(fig_disp, use_container_width=True)
+
+            # Aba 5: Consulta e Exportação
+            with aba_estudantes:
+                st.subheader("Lista de Estudantes e Exportação")
+                grupo_filtro = st.selectbox(
+                    "Selecione o Grupo:",
+                    options=sorted(df_imputado["Grupo"].unique()),
+                )
+                alunos_filtrados = df_imputado[
+                    df_imputado["Grupo"] == grupo_filtro
+                ]
+
+                cols_mostrar = [
+                    c
+                    for c in [
+                        coluna_id,
+                        "Média Global",
+                        "Faltas Médias",
+                        "Grupo",
+                    ]
+                    if c in df_imputado.columns
+                ]
+                st.write(
+                    f"Total de **{len(alunos_filtrados)}** estudantes no Grupo {grupo_filtro}:"
+                )
+                st.dataframe(
+                    alunos_filtrados[cols_mostrar], use_container_width=True
+                )
+
+                # Botão para exportar resultados
+                buffer = io.BytesIO()
+                with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+                    df_imputado.to_excel(
+                        writer, sheet_name="Alunos_Clusterizados", index=False
+                    )
+                    analise_perfis.to_excel(
+                        writer, sheet_name="Resumo_Perfis"
+                    )
+
+                st.download_button(
+                    label="📥 Baixar Planilha com Grupos Atribuídos (.xlsx)",
+                    data=buffer.getvalue(),
+                    file_name="Resultado_Clusterizacao_Estudantes.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+
+        except Exception as e:
+            st.error(f"Erro no processamento dos dados ou do modelo: {e}")
+else:
+    st.info("Por favor, faça o upload de um arquivo válido para começar.")
