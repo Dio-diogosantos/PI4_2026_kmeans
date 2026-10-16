@@ -114,7 +114,7 @@ if df_raw is not None and not df_raw.empty:
     features_selecionadas = st.sidebar.multiselect(
         "Selecione as variáveis para o agrupamento:",
         options=colunas_numericas,
-        default=[]
+        default=[],
         placeholder="Escolha as variáveis"  # <-- Altera o texto exibido no campo vazio
         if len(features_sugeridas) > 0
         else colunas_numericas,
