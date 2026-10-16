@@ -87,7 +87,7 @@ if df_raw is not None and not df_raw.empty:
 
     if coluna_etapa != "Nenhum":
         etapas_unicas = sorted(df_filtrado[coluna_etapa].dropna().unique())
-        etapa_sel = st.sidebar.selectbox("Selecione a Etapa:", etapas_unicas)
+        etapa_sel = st.sidebar.selectbox("Selecione a Etapa (Série):", etapas_unicas)
         df_filtrado = df_filtrado[df_filtrado[coluna_etapa] == etapa_sel]
 
     # Identificador do Aluno
