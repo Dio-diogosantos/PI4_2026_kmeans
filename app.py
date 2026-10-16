@@ -221,7 +221,7 @@ if df_raw is not None and not df_raw.empty:
             aba_decisao, aba_heatmap, aba_perfis, aba_dispersao, aba_estudantes = (
                 st.tabs(
                     [
-                        "1. Decisão do K",
+                        "1. Decisão do k",
                         "2. Mapa de Calor",
                         "3. Resumo dos Perfis",
                         "4. Gráfico de Dispersão",
