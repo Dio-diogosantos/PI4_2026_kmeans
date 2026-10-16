@@ -271,7 +271,7 @@ if df_raw is not None and not df_raw.empty:
                     matriz_corr,
                     annot=True,
                     fmt=".2f",
-                    cmap="coolwarm",
+                    cmap="coolwarm_r",
                     vmin=-1,
                     vmax=1,
                     linewidths=0.5,
