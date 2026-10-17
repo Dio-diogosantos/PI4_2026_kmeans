@@ -223,3 +223,47 @@ def criar_grafico_impacto_categoria(
     )
 
     return fig, resumo, col_media, col_faltas
+
+
+
+import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from scipy import stats
+
+#Teste estatístico para comparar médias de grupos
+def testar_diferenca_medias(
+    df: pd.DataFrame, coluna_categoria: str, coluna_metrica: str
+) -> dict:
+    """Realiza o Teste t de Student para verificar se há diferença estatisticamente
+
+    significativa entre dois grupos (ex: 0 e 1).
+    """
+    grupos = df[coluna_categoria].dropna().unique()
+
+    # O teste exige exatamente 2 grupos distintos na amostra
+    if len(grupos) != 2:
+        return {
+            "p_valor": None,
+            "significativo": False,
+            "mensagem": "Não foi possível realizar o teste estatístico: a amostra filtrada não possui exatamente 2 grupos comparáveis.",
+        }
+
+    grupo_a = df[df[coluna_categoria] == grupos[0]][coluna_metrica].dropna()
+    grupo_b = df[df[coluna_categoria] == grupos[1]][coluna_metrica].dropna()
+
+    # Aplica o Teste t de Student (Welch's t-test, sem assumir variâncias iguais)
+    stat, p_valor = stats.ttest_ind(grupo_a, grupo_b, equal_var=False)
+
+    significativo = p_valor < 0.05
+
+    if significativo:
+        mensagem = f"Existe diferença estatisticamente significativa ($p = {p_valor:.4f} < 0.05$) no indicador **{coluna_metrica}** entre os grupos de **{coluna_categoria}**."
+    else:
+        mensagem = f"Não há evidência de diferença estatisticamente significativa ($p = {p_valor:.4f} \ge 0.05$) no indicador **{coluna_metrica}** entre os grupos."
+
+    return {
+        "p_valor": p_valor,
+        "significativo": significativo,
+        "mensagem": mensagem,
+    }
