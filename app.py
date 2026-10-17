@@ -104,7 +104,7 @@ if df_raw is not None and not df_raw.empty:
         else 0,
     )
 
-    # Seleção das Features para Clusterização
+    # Seleção das Variáveis para Clusterização (Agrupamentos)
     colunas_excluir_padrao = [
         coluna_id,
         coluna_ano,
@@ -115,6 +115,24 @@ if df_raw is not None and not df_raw.empty:
     features_sugeridas = [
         c for c in colunas_numericas if c not in colunas_excluir_padrao
     ]
+
+
+    # 1. Captura das colunas selecionadas nos filtros anteriores
+    coluna_ano = st.sidebar.selectbox("Coluna de Ano/Temporal (opcional):", ...)
+    coluna_etapa = st.sidebar.selectbox("Coluna de Etapa/Série (opcional):", ...)
+    coluna_id = st.sidebar.selectbox(
+        "Coluna de Identificação do Aluno (ex: Matrícula):", ...
+    )
+
+    # 2. Cria uma lista com as colunas que devem ser EXCLUÍDAS das variáveis de agrupamento
+    colunas_excluidas = [coluna_ano, coluna_etapa, coluna_id]
+
+    # 3. Filtra apenas as colunas numéricas que NÃO estão na lista de excluídas
+    opcoes_clustering = [
+        col for col in colunas_numericas if col not in colunas_excluidas
+    ]
+
+    
 
     features_selecionadas = st.sidebar.multiselect(
         "Selecione as variáveis para o agrupamento:",
