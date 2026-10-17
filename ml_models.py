@@ -141,3 +141,71 @@ def rotular_perfis(
             mapeamento[int(grupo)] = f"Regular {posicao}"
 
     return mapeamento
+
+
+
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+
+def criar_grafico_impacto_categoria(
+    df: pd.DataFrame,
+    coluna_categoria: str,
+    col_media: str = "Média Global",
+    col_faltas: str = "Faltas Médias",
+):
+    """Gera um gráfico comparativo de barras de Média Global e Faltas Médias
+
+    agrupados por uma variável categórica/nominal.
+    """
+    resumo = (
+        df.groupby(coluna_categoria)[[col_media, col_faltas]]
+        .mean()
+        .reset_index()
+    )
+
+    # Cria subplots (2 colunas: Média Global e Faltas)
+    fig = make_subplots(
+        rows=1,
+        cols=2,
+        subplot_titles=[
+            f"{coluna_categoria} x {col_media}",
+            f"{coluna_categoria} x {col_faltas}",
+        ],
+    )
+
+    # Gráfico 1: Média Global
+    fig.add_trace(
+        go.Bar(
+            x=resumo[coluna_categoria].astype(str),
+            y=resumo[col_media],
+            name=col_media,
+            text=resumo[col_media].round(2),
+            textposition="auto",
+            marker_color="#4682B4",
+        ),
+        row=1,
+        col=1,
+    )
+
+    # Gráfico 2: Faltas Médias
+    fig.add_trace(
+        go.Bar(
+            x=resumo[coluna_categoria].astype(str),
+            y=resumo[col_faltas],
+            name=col_faltas,
+            text=resumo[col_faltas].round(2),
+            textposition="auto",
+            marker_color="#5F9EA0",
+        ),
+        row=1,
+        col=2,
+    )
+
+    fig.update_layout(
+        title_text=f"Impacto de '{coluna_categoria}' no Desempenho e na Assiduidade",
+        showlegend=False,
+        height=400,
+    )
+
+    return fig, resumo
