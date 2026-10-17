@@ -267,7 +267,20 @@ if df_raw is not None and not df_raw.empty:
                     tabela_centralizada,
                     use_container_width=True,
                     hide_index=True,
+                    column_config={
+                        "k": st.column_config.NumberColumn("k", alignment="center"),
+                        "Silhouette (↑)": st.column_config.NumberColumn(
+                            "Silhouette (↑)", format="%.3f", alignment="center"
+                        ),
+                        "Davies-Bouldin (↓)": st.column_config.NumberColumn(
+                            "Davies-Bouldin (↓)", format="%.3f", alignment="center"
+                        ),
+                        "Calinski-Harabasz (↑)": st.column_config.NumberColumn(
+                            "Calinski-Harabasz (↑)", format="%.1f", alignment="center"
+                        ),
+                    },
                 )
+                
                 
 
             
