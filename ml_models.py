@@ -232,38 +232,59 @@ from plotly.subplots import make_subplots
 from scipy import stats
 
 #Teste estatístico para comparar médias de grupos
+
+
 def testar_diferenca_medias(
     df: pd.DataFrame, coluna_categoria: str, coluna_metrica: str
 ) -> dict:
-    """Realiza o Teste t de Student para verificar se há diferença estatisticamente
+    """Realiza o Teste t de Student e calcula o tamanho amostral de cada grupo."""
+    # Remove nulos nas duas colunas
+    df_valido = df[[coluna_categoria, coluna_metrica]].dropna()
+    grupos = df_valido[coluna_categoria].unique()
 
-    significativa entre dois grupos (ex: 0 e 1).
-    """
-    grupos = df[coluna_categoria].dropna().unique()
-
-    # O teste exige exatamente 2 grupos distintos na amostra
     if len(grupos) != 2:
         return {
             "p_valor": None,
             "significativo": False,
-            "mensagem": "Não foi possível realizar o teste estatístico: a amostra filtrada não possui exatamente 2 grupos comparáveis.",
+            "mensagem": "Não foi possível realizar o teste: a amostra filtrada possui apenas 1 grupo.",
         }
 
-    grupo_a = df[df[coluna_categoria] == grupos[0]][coluna_metrica].dropna()
-    grupo_b = df[df[coluna_categoria] == grupos[1]][coluna_metrica].dropna()
+    g0 = df_valido[df_valido[coluna_categoria] == grupos[0]][coluna_metrica]
+    g1 = df_valido[df_valido[coluna_categoria] == grupos[1]][coluna_metrica]
 
-    # Aplica o Teste t de Student (Welch's t-test, sem assumir variâncias iguais)
-    stat, p_valor = stats.ttest_ind(grupo_a, grupo_b, equal_var=False)
+    n0, n1 = len(g0), len(g1)
+    m0, m1 = g0.mean(), g1.mean()
+
+    # Teste t de Welch
+    stat, p_valor = stats.ttest_ind(g0, g1, equal_var=False)
 
     significativo = p_valor < 0.05
+    diff_abs = abs(m0 - m1)
+
+    # Diagnóstico da amostra
+    aviso_amostra = ""
+    if min(n0, n1) < 5:
+        aviso_amostra = f" (⚠️ Atenção: grupo com amostra reduzida: N={min(n0, n1)})"
 
     if significativo:
-        mensagem = f"Existe diferença estatisticamente significativa ($p = {p_valor:.4f} < 0.05$) no indicador **{coluna_metrica}** entre os grupos de **{coluna_categoria}**."
+        msg = (
+            f"Diferença estatisticamente significativa no indicador **{coluna_metrica}** "
+            f"($p = {p_valor:.4f} < 0.05$). Média Grupo '{grupos[0]}': {m0:.2f} (N={n0}) vs "
+            f"Grupo '{grupos[1]}': {m1:.2f} (N={n1}).{aviso_amostra}"
+        )
     else:
-        mensagem = f"Não há evidência de diferença estatisticamente significativa ($p = {p_valor:.4f} \ge 0.05$) no indicador **{coluna_metrica}** entre os grupos."
+        msg = (
+            f"Diferença média observada é de **{diff_abs:.2f}**, mas o p-valor ($p = {p_valor:.4f} \ge 0.05$) "
+            f"indica que a variação pode decorrer do tamanho amostral reduzido "
+            f"(Grupo '{grupos[0]}': N={n0} | Grupo '{grupos[1]}': N={n1}).{aviso_amostra}"
+        )
 
     return {
         "p_valor": p_valor,
         "significativo": significativo,
-        "mensagem": mensagem,
+        "mensagem": msg,
+        "n0": n0,
+        "n1": n1,
+        "m0": m0,
+        "m1": m1,
     }
