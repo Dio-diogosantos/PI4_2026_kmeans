@@ -119,8 +119,8 @@ if df_raw is not None and not df_raw.empty:
 
     features_selecionadas = st.sidebar.multiselect(
         "Selecione as variáveis para o agrupamento:",
-        options=features_sugeridas,  # <-- Garante que Ano, Etapa, Matrícula, etc., fiquem de fora!
-        default=features_sugeridas,  # <-- Opcional: já deixa as notas marcadas por padrão
+        options=features_sugeridas,  # <-- Garante que colunas selecionadas anteriormente fiquem de fora!
+        default=[],  # <-- Deixa o campo zerado/vazio ao entrar na página!        
         placeholder="Escolha as variáveis",
     )
       
