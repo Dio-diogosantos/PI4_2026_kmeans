@@ -125,15 +125,6 @@ if df_raw is not None and not df_raw.empty:
     )
       
 
-   # features_selecionadas = st.sidebar.multiselect(
-    #    "Selecione as variáveis para o agrupamento:",
-     #   options=colunas_numericas,
-      #  default=[],
-       # placeholder="Escolha as variáveis"  # <-- Altera o texto exibido no campo vazio
-        #if len(features_sugeridas) > 0
-        #else colunas_numericas,
-    #)
-
     k_escolhido = st.sidebar.slider(
         "Quantidade de grupos (k):",
         min_value=2,
@@ -262,14 +253,13 @@ if df_raw is not None and not df_raw.empty:
             # ---------------------------------------------------------
             # 4. ESTRUTURA EM ABAS
             # ---------------------------------------------------------
-            aba_decisao, aba_heatmap, aba_perfis, aba_dispersao, aba_estudantes = (
+            aba_decisao, aba_heatmap, aba_perfis, aba_estudantes = (
                 st.tabs(
                     [
                         "1. Decisão do k",
                         "2. Mapa de Calor",
-                        "3. Resumo dos Perfis",
-                        "4. Gráfico de Dispersão",
-                        "5. Consulta & Exportação",
+                        "3. Gráfico e Resumo dos Perfis (Agrupamentos)",                        
+                        "4. Consulta & Exportação",
                     ]
                 )
             )
@@ -277,8 +267,7 @@ if df_raw is not None and not df_raw.empty:
             # Aba 1: Métricas & Cotovelo
 
             
-            
-            
+                        
             with aba_decisao:
                 st.subheader("Validação Estatística para Escolha da quantidade de grupos (k)")
 
@@ -368,8 +357,42 @@ if df_raw is not None and not df_raw.empty:
                 plt.tight_layout()
                 st.pyplot(fig_heat)
 
-            # Aba 3: Perfis
-            with aba_perfis:
+            # Aba 3: Gráfico e Resumo dos Agrupamentos
+            with aba_perfis:                            
+                st.subheader("Gráfico de Dispersão dos Estudantes")
+                eixo_x = st.selectbox(
+                    "Selecione a variável para o Eixo X:",
+                    options=colunas_numericas,
+                    index=colunas_numericas.index("Média Global")
+                    if "Média Global" in colunas_numericas
+                    else 0,
+                )
+                eixo_y = st.selectbox(
+                    "Selecione a variável para o Eixo Y:",
+                    options=colunas_numericas,
+                    index=colunas_numericas.index("Faltas Médias")
+                    if "Faltas Médias" in colunas_numericas
+                    else min(1, len(colunas_numericas) - 1),
+                )
+
+                fig_disp = px.scatter(
+                    df_imputado,
+                    x=eixo_x,
+                    y=eixo_y,
+                    color="Grupo_Rotulo",
+                    hover_data=[coluna_id],
+                    title=f"Perfis de Alunos ({eixo_x} vs {eixo_y})",
+                    symbol="Grupo_Rotulo",
+                )
+                st.plotly_chart(fig_disp, use_container_width=True)
+
+
+
+
+
+
+
+                
                 st.subheader("Resumo Consolidado dos Perfis")
 
                 # Monta a agregação com a média de todas as variáveis
@@ -411,42 +434,34 @@ if df_raw is not None and not df_raw.empty:
 
             
 
-            
-#            with aba_perfis:
- #               st.subheader(f"Médias das variáveis por grupo (k = {k_escolhido})")
-  #              st.dataframe(
-   #                 analise_perfis.style.format("{:.2f}"),
-    #                use_container_width=True,
-     #           )
-
             # Aba 4: Dispersão
-            with aba_dispersao:
-                st.subheader("Gráfico de Dispersão dos Estudantes")
-                eixo_x = st.selectbox(
-                    "Selecione a variável para o Eixo X:",
-                    options=colunas_numericas,
-                    index=colunas_numericas.index("Média Global")
-                    if "Média Global" in colunas_numericas
-                    else 0,
-                )
-                eixo_y = st.selectbox(
-                    "Selecione a variável para o Eixo Y:",
-                    options=colunas_numericas,
-                    index=colunas_numericas.index("Faltas Médias")
-                    if "Faltas Médias" in colunas_numericas
-                    else min(1, len(colunas_numericas) - 1),
-                )
+#            with aba_dispersao:
+ #               st.subheader("Gráfico de Dispersão dos Estudantes")
+  #              eixo_x = st.selectbox(
+   #                 "Selecione a variável para o Eixo X:",
+    #                options=colunas_numericas,
+     #               index=colunas_numericas.index("Média Global")
+      #              if "Média Global" in colunas_numericas
+       #             else 0,
+        #        )
+         #       eixo_y = st.selectbox(
+          #          "Selecione a variável para o Eixo Y:",
+           #         options=colunas_numericas,
+            #        index=colunas_numericas.index("Faltas Médias")
+             #       if "Faltas Médias" in colunas_numericas
+              #      else min(1, len(colunas_numericas) - 1),
+               # )
 
-                fig_disp = px.scatter(
-                    df_imputado,
-                    x=eixo_x,
-                    y=eixo_y,
-                    color="Grupo_Rotulo",
-                    hover_data=[coluna_id],
-                    title=f"Perfis de Alunos ({eixo_x} vs {eixo_y})",
-                    symbol="Grupo_Rotulo",
-                )
-                st.plotly_chart(fig_disp, use_container_width=True)
+#                fig_disp = px.scatter(
+ #                   df_imputado,
+  #                  x=eixo_x,
+   #                 y=eixo_y,
+    #                color="Grupo_Rotulo",
+     #               hover_data=[coluna_id],
+      #              title=f"Perfis de Alunos ({eixo_x} vs {eixo_y})",
+       #             symbol="Grupo_Rotulo",
+        #        )
+         #       st.plotly_chart(fig_disp, use_container_width=True)
 
             # Aba 5: Consulta e Exportação
             with aba_estudantes:
