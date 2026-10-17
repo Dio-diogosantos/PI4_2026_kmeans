@@ -148,23 +148,36 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
+import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+
 def criar_grafico_impacto_categoria(
     df: pd.DataFrame,
     coluna_categoria: str,
-    col_media: str = "Média Global",
-    col_faltas: str = "Faltas Médias",
 ):
-    """Gera um gráfico comparativo de barras de Média Global e Faltas Médias
+    """Gera um gráfico comparativo de barras agrupados por uma variável categórica/nominal."""
+    # Garante que encontra a coluna de Média Global (ou a 1ª coluna numérica)
+    if "Média Global" in df.columns:
+        col_media = "Média Global"
+    else:
+        col_media = df.select_dtypes(include=["number"]).columns[0]
 
-    agrupados por uma variável categórica/nominal.
-    """
+    # Garante que encontra a coluna de Faltas Médias (ou a última coluna numérica)
+    if "Faltas Médias" in df.columns:
+        col_faltas = "Faltas Médias"
+    else:
+        col_faltas = df.select_dtypes(include=["number"]).columns[-1]
+
+    # Calcula as médias por categoria
     resumo = (
         df.groupby(coluna_categoria)[[col_media, col_faltas]]
         .mean()
         .reset_index()
     )
 
-    # Cria subplots (2 colunas: Média Global e Faltas)
+    # Subplots (2 colunas: Média e Faltas)
     fig = make_subplots(
         rows=1,
         cols=2,
@@ -174,7 +187,7 @@ def criar_grafico_impacto_categoria(
         ],
     )
 
-    # Gráfico 1: Média Global
+    # Gráfico 1: Média
     fig.add_trace(
         go.Bar(
             x=resumo[coluna_categoria].astype(str),
@@ -188,7 +201,7 @@ def criar_grafico_impacto_categoria(
         col=1,
     )
 
-    # Gráfico 2: Faltas Médias
+    # Gráfico 2: Faltas
     fig.add_trace(
         go.Bar(
             x=resumo[coluna_categoria].astype(str),
@@ -203,9 +216,10 @@ def criar_grafico_impacto_categoria(
     )
 
     fig.update_layout(
-        title_text=f"Impacto de '{coluna_categoria}' no Desempenho e na Assiduidade",
+        title_text=f"Impacto de '{coluna_categoria}' no Desempenho e Assiduidade",
         showlegend=False,
-        height=400,
+        height=380,
+        margin=dict(l=20, r=20, t=50, b=20),
     )
 
-    return fig, resumo
+    return fig, resumo, col_media, col_faltas
