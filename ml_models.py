@@ -68,3 +68,76 @@ def sugerir_k_recomendado(tabela_metricas: pd.DataFrame) -> int:
     )["k"].iloc[0]
 
     return int(melhor_k)
+
+
+
+import numpy as np
+import pandas as pd
+
+
+def rotular_perfis(
+    df_clusterizado: pd.DataFrame,
+    nome_col_grupo: str = "Grupo",
+    col_media: str = "Média Global",
+    col_faltas: str = "Faltas Médias",
+) -> dict[int, str]:
+    """Rotula pedagogicamente os clusters ('Avançado', 'Regular', 'Necessita de Reforço')
+
+    baseado no desempenho das médias e faltas.
+    """
+    # Agrupa e calcula as médias por cluster
+    resumo = (
+        df_clusterizado.groupby(nome_col_grupo)
+        .agg(
+            media_global=(
+                col_media
+                if col_media in df_clusterizado.columns
+                else df_clusterizado.select_dtypes(
+                    include=["number"]
+                ).columns[0],
+                "mean",
+            ),
+            faltas_medias=(
+                col_faltas
+                if col_faltas in df_clusterizado.columns
+                else df_clusterizado.select_dtypes(
+                    include=["number"]
+                ).columns[-1],
+                "mean",
+            ),
+        )
+        .reset_index()
+    )
+
+    desvio_media = resumo["media_global"].std(ddof=0)
+    desvio_media = desvio_media if desvio_media != 0 else 1.0
+
+    desvio_faltas = resumo["faltas_medias"].std(ddof=0)
+    desvio_faltas = desvio_faltas if desvio_faltas != 0 else 1.0
+
+    # Score: Maior Média e Menos Faltas geram maior Score
+    resumo["score_perfil"] = (
+        (resumo["media_global"] - resumo["media_global"].mean()) / desvio_media
+    ) - (
+        (resumo["faltas_medias"] - resumo["faltas_medias"].mean()) / desvio_faltas
+    )
+
+    resumo = resumo.sort_values(
+        by=["score_perfil", "media_global", "faltas_medias"],
+        ascending=[False, False, True],
+    ).reset_index(drop=True)
+
+    total_clusters = len(resumo)
+    mapeamento = {}
+
+    for posicao, grupo in enumerate(resumo[nome_col_grupo].tolist()):
+        if posicao == 0:
+            mapeamento[int(grupo)] = "Avançado"
+        elif posicao == total_clusters - 1:
+            mapeamento[int(grupo)] = "Necessita de Reforço"
+        elif total_clusters == 3:
+            mapeamento[int(grupo)] = "Regular"
+        else:
+            mapeamento[int(grupo)] = f"Regular {posicao}"
+
+    return mapeamento
