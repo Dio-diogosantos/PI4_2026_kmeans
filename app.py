@@ -248,27 +248,27 @@ if df_raw is not None and not df_raw.empty:
                 "grupo_cluster"
             ].astype(str)
 
-"""            
-            df_imputado["Grupo"] = kmeans.fit_predict(X_scaled)
-            df_imputado["Grupo_Rotulo"] = "Grupo " + df_imputado[
-                "Grupo"
-            ].astype(str)
-
+            
+#            df_imputado["Grupo"] = kmeans.fit_predict(X_scaled)
+ #           df_imputado["Grupo_Rotulo"] = "Grupo " + df_imputado[
+  #              "Grupo"
+   #         ].astype(str)
+#
             # Tabela de Perfis
-            dict_agg = {col: "mean" for col in features_selecionadas}
-            if "Média Global" in df_imputado.columns:
-                dict_agg["Média Global"] = "mean"
-            if "Faltas Médias" in df_imputado.columns:
-                dict_agg["Faltas Médias"] = "mean"
-            dict_agg[coluna_id] = "count"
+ #           dict_agg = {col: "mean" for col in features_selecionadas}
+  #          if "Média Global" in df_imputado.columns:
+   #             dict_agg["Média Global"] = "mean"
+    #        if "Faltas Médias" in df_imputado.columns:
+     #           dict_agg["Faltas Médias"] = "mean"
+      #      dict_agg[coluna_id] = "count"
 
-            analise_perfis = df_imputado.groupby("Grupo").agg(dict_agg)
-            analise_perfis = analise_perfis.rename(
-                columns={coluna_id: "Qtd_Alunos"}
-            )
+       #     analise_perfis = df_imputado.groupby("Grupo").agg(dict_agg)
+        #    analise_perfis = analise_perfis.rename(
+         #       columns={coluna_id: "Qtd_Alunos"}
+          #  )
 
 
-"""
+
             # ---------------------------------------------------------
             # 4. ESTRUTURA EM ABAS
             # ---------------------------------------------------------
