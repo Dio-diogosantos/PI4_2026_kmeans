@@ -267,7 +267,7 @@ if df_raw is not None and not df_raw.empty:
                 ).set_table_styles([{"selector": "th", "props": [("text-align", "center")]}])
 
                 st.dataframe(
-                    tabela_centralizada,
+                    tabela_validacao,
                     use_container_width=True,
                     hide_index=True,
                     column_config={
