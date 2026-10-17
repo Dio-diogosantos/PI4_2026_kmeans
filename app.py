@@ -283,26 +283,8 @@ if df_raw is not None and not df_raw.empty:
                         ),
                     },
                 )
-
-
-            st.dataframe(
-    tabela_validacao,
-    use_container_width=True,
-    hide_index=True,
-    column_config={
-        "k": st.column_config.Column("k", width="small"),
-        "Silhouette (↑)": st.column_config.Column("Silhouette (↑)"),
-        "Davies-Bouldin (↓)": st.column_config.Column("Davies-Bouldin (↓)"),
-        "Calinski-Harabasz (↑)": st.column_config.Column(
-            "Calinski-Harabasz (↑)"
-        ),
-    },
-)
+             
                 
-                
-
-            
-                                
 
             # Aba 2: Mapa de Calor
             with aba_heatmap:
