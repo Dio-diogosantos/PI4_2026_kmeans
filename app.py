@@ -276,10 +276,10 @@ if df_raw is not None and not df_raw.empty:
 
 
                 
-                /*# Estiliza o dataframe para centralizar cabeçalhos e valores
-                tabela_centralizada = tabela_validacao.style.set_properties(
-                    **{"text-align": "center"}
-                ).set_table_styles([{"selector": "th", "props": [("text-align", "center")]}])*/
+                # Estiliza o dataframe para centralizar cabeçalhos e valores
+                #tabela_centralizada = tabela_validacao.style.set_properties(
+                #    **{"text-align": "center"}
+                #).set_table_styles([{"selector": "th", "props": [("text-align", "center")]}])
 
                 st.dataframe(
                     tabela_validacao,
