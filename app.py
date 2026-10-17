@@ -258,6 +258,23 @@ if df_raw is not None and not df_raw.empty:
 
                 #Tabela comparativa com os índices
                 st.markdown("**Comparativo de Índices**")
+
+                st.markdown(
+                    """
+                    <style>
+                    [data-testid="stHeaderRow"] {
+                        text-align: center !important;
+                    }
+                    div[data-testid="stHeaderCell"] div {
+                        justify-content: center !important;
+                    }
+                    </style>
+                """,
+                    unsafe_allow_html=True,
+                )
+
+
+                
                 # Estiliza o dataframe para centralizar cabeçalhos e valores
                 tabela_centralizada = tabela_validacao.style.set_properties(
                     **{"text-align": "center"}
