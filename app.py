@@ -258,41 +258,20 @@ if df_raw is not None and not df_raw.empty:
 
                 #Tabela comparativa com os índices
                 st.markdown("**Comparativo de Índices**")
+                # Estiliza o dataframe para centralizar cabeçalhos e valores
+                tabela_centralizada = tabela_validacao.style.set_properties(
+                    **{"text-align": "center"}
+                ).set_table_styles([{"selector": "th", "props": [("text-align", "center")]}])
+
                 st.dataframe(
-                    tabela_validacao,
+                    tabela_centralizada,
                     use_container_width=True,
                     hide_index=True,
                 )
                 
-                """col_g, col_t = st.columns([1.2, 1])
-                with col_g:
-                    st.markdown("**Método do Cotovelo (WCSS)**")
-                    fig_cotovelo, ax_cotovelo = plt.subplots(figsize=(6, 4))
-                    ax_cotovelo.plot(
-                        range(1, len(wcss) + 1),
-                        wcss,
-                        marker="o",
-                        color="steelblue",
-                    )
-                    ax_cotovelo.axvline(
-                        x=k_escolhido,
-                        color="crimson",
-                        linestyle="--",
-                        label=f"k Selecionado ({k_escolhido})",
-                    )
-                    ax_cotovelo.set_xlabel("Número de Grupos (k)")
-                    ax_cotovelo.set_ylabel("Inércia Amostral")
-                    ax_cotovelo.legend()
-                    st.pyplot(fig_cotovelo)
-               """
-                
-                """with col_t:
-                    st.markdown("**Comparativo de Índices**")
-                    st.dataframe(
-                        tabela_validacao,
-                        use_container_width=True,
-                        hide_index=True,
-                    )"""
+
+            
+                                
 
             # Aba 2: Mapa de Calor
             with aba_heatmap:
