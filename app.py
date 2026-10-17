@@ -253,13 +253,14 @@ if df_raw is not None and not df_raw.empty:
             # ---------------------------------------------------------
             # 4. ESTRUTURA EM ABAS
             # ---------------------------------------------------------
-            aba_decisao, aba_heatmap, aba_perfis, aba_estudantes = (
+            aba_decisao, aba_heatmap, aba_perfis, aba_estudantes, aba_socioeconomico = (
                 st.tabs(
                     [
                         "1. Decisão do k",
                         "2. Mapa de Calor",
                         "3. Gráfico e Resumo dos Perfis (Agrupamentos)",                        
                         "4. Consulta & Exportação",
+                        "5. Impacto Socioeconômico",
                     ]
                 )
             )
@@ -427,7 +428,7 @@ if df_raw is not None and not df_raw.empty:
                 )
 
 
-            # Aba 5: Consulta e Exportação
+            # Aba 4: Consulta e Exportação
             with aba_estudantes:
                 st.subheader("Lista de Estudantes e Exportação")
                 grupo_filtro = st.selectbox(
@@ -476,3 +477,77 @@ if df_raw is not None and not df_raw.empty:
             st.error(f"Erro no processamento dos dados ou do modelo: {e}")
 else:
     st.info("Por favor, faça o upload de um arquivo válido para começar.")
+
+
+
+# Aba 5: Impacto Socioeconômico e Logístico
+with aba_socioeconomico:
+    st.subheader("Impacto Socioeconômico e Logístico")
+    st.caption(
+        "Esta aba analisa como fatores sociais, econômicos e logísticos se relacionam com as médias e assiduidade dos estudantes."
+    )
+
+    # Filtra colunas categóricas ou numéricas com poucos valores únicos (binárias/nominais)
+    colunas_categoria_possiveis = [
+        col
+        for col in df_filtrado.columns
+        if df_filtrado[col].nunique() <= 10 and col not in [coluna_id]
+    ]
+
+    st.markdown("### Seleção de Variáveis Nominais")
+    col_sel1, col_sel2 = st.columns(2)
+
+    with col_sel1:
+        cat_1 = st.selectbox(
+            "Selecione a 1ª Variável para análise:",
+            options=colunas_categoria_possiveis,
+            index=colunas_categoria_possiveis.index("Transporte_1")
+            if "Transporte_1" in colunas_categoria_possiveis
+            else 0,
+        )
+
+    with col_sel2:
+        cat_2 = st.selectbox(
+            "Selecione a 2ª Variável para análise:",
+            options=colunas_categoria_possiveis,
+            index=colunas_categoria_possiveis.index("BF_1")
+            if "BF_1" in colunas_categoria_possiveis
+            else min(1, len(colunas_categoria_possiveis) - 1),
+        )
+
+    st.markdown("---")
+
+    # Renderização Lado a Lado
+    col_graf1, col_graf2 = st.columns(2)
+
+    with col_graf1:
+        st.markdown(f"#### Análise: {cat_1}")
+        fig1, resumo1 = criar_grafico_impacto_categoria(df_filtrado, cat_1)
+        st.plotly_chart(
+            fig1, use_container_width=True, key=f"grafico_impacto_{cat_1}"
+        )
+
+        st.markdown("**Resumo Médio:**")
+        st.dataframe(
+            resumo1.style.format(
+                {"Média Global": "{:.2f}", "Faltas Médias": "{:.2f}"}
+            ),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    with col_graf2:
+        st.markdown(f"#### Análise: {cat_2}")
+        fig2, resumo2 = criar_grafico_impacto_categoria(df_filtrado, cat_2)
+        st.plotly_chart(
+            fig2, use_container_width=True, key=f"grafico_impacto_{cat_2}"
+        )
+
+        st.markdown("**Resumo Médio:**")
+        st.dataframe(
+            resumo2.style.format(
+                {"Média Global": "{:.2f}", "Faltas Médias": "{:.2f}"}
+            ),
+            use_container_width=True,
+            hide_index=True,
+        )
