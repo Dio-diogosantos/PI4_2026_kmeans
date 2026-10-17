@@ -15,7 +15,8 @@ from sklearn.metrics import (
 from sklearn.preprocessing import StandardScaler
 
 # IMPORTAÇÃO DAS SUAS FUNÇÕES PERSONALIZADAS DO ML_MODELS.PY:
-from ml_models import calcular_metricas_k, sugerir_k_recomendado, rotular_perfis
+from ml_models import calcular_metricas_k, sugerir_k_recomendado, rotular_perfis,criar_grafico_impacto_categoria
+
 
 
 
