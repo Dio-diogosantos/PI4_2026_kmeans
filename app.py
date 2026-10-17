@@ -329,7 +329,7 @@ if df_raw is not None and not df_raw.empty:
 
             # Aba 3: Perfis
             with aba_perfis:
-                st.subheader(f"Médias das Variáveis por Perfil (k = {k_escolhido})")
+                st.subheader(f"Médias das variáveis por grupo (k = {k_escolhido})")
                 st.dataframe(
                     analise_perfis.style.format("{:.2f}"),
                     use_container_width=True,
