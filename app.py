@@ -124,7 +124,7 @@ if df_raw is not None and not df_raw.empty:
     )
 
     k_escolhido = st.sidebar.slider(
-        "Quantidade de clusters (k):",
+        "Quantidade de grupos (k):",
         min_value=2,
         max_value=6,
         value=3,
