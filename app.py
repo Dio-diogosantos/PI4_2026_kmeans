@@ -14,6 +14,9 @@ from sklearn.metrics import (
 )
 from sklearn.preprocessing import StandardScaler
 
+# IMPORTAÇÃO DAS SUAS FUNÇÕES PERSONALIZADAS DO ML_MODELS.PY:
+from ml_models import calcular_metricas_k, sugerir_k_recomendado
+
 st.set_page_config(
     page_title="Painel Educacional de Agrupamento", layout="wide"
 )
@@ -231,6 +234,16 @@ if df_raw is not None and not df_raw.empty:
             )
 
             # Aba 1: Métricas & Cotovelo
+
+            tabela_validacao = calcular_metricas_k(X_scaled)
+            k_sugerido = sugerir_k_recomendado(tabela_validacao)
+
+            st.info(
+                f"💡 **Recomendação Algorítmica:** Com base na combinação dos índices "
+                f"(Silhouette, Davies-Bouldin e Calinski-Harabasz), o número ideal sugerido é **k = {k_sugerido}**."
+            )
+            
+            
             with aba_decisao:
                 st.subheader("Validação Estatística para Escolha da quantidade de grupos (k)")
                 
