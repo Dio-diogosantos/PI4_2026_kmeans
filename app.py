@@ -489,10 +489,12 @@ with aba_socioeconomico:
     )
 
     # Filtra colunas com poucos valores únicos para análise categórica
+    colunas_excluir_socio = [coluna_id, "Grupo", coluna_ano, coluna_etapa]
+    
     colunas_categoria_possiveis = [
         col
         for col in df_imputado.columns
-        if df_imputado[col].nunique() <= 10 and col not in [coluna_id, "Grupo"]
+        if df_imputado[col].nunique() <= 5 and col not in colunas_excluir_socio
     ]
 
     if not colunas_categoria_possiveis:
