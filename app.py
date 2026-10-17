@@ -259,21 +259,6 @@ if df_raw is not None and not df_raw.empty:
                 #Tabela comparativa com os índices
                 st.markdown("**Comparativo de Índices**")
 
-                st.markdown(
-                    """
-                    <style>
-                    /* Centraliza o texto do cabeçalho da tabela */
-                    [data-testid="stHeaderCell"] {
-                        text-align: center !important;
-                    }
-                    [data-testid="stHeaderCell"] > div {
-                        justify-content: center !important;
-                    }
-                    </style>
-                    """,
-                    unsafe_allow_html=True,
-                )
-
 
                 
                 # Estiliza o dataframe para centralizar cabeçalhos e valores
@@ -298,6 +283,21 @@ if df_raw is not None and not df_raw.empty:
                         ),
                     },
                 )
+
+
+            st.dataframe(
+    tabela_validacao,
+    use_container_width=True,
+    hide_index=True,
+    column_config={
+        "k": st.column_config.Column("k", width="small"),
+        "Silhouette (↑)": st.column_config.Column("Silhouette (↑)"),
+        "Davies-Bouldin (↓)": st.column_config.Column("Davies-Bouldin (↓)"),
+        "Calinski-Harabasz (↑)": st.column_config.Column(
+            "Calinski-Harabasz (↑)"
+        ),
+    },
+)
                 
                 
 
