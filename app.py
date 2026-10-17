@@ -380,11 +380,54 @@ if df_raw is not None and not df_raw.empty:
 
             # Aba 3: Perfis
             with aba_perfis:
-                st.subheader(f"Médias das variáveis por grupo (k = {k_escolhido})")
-                st.dataframe(
-                    analise_perfis.style.format("{:.2f}"),
-                    use_container_width=True,
+                st.subheader("Resumo Consolidado dos Perfis")
+
+                # Monta a agregação com a média de todas as variáveis
+                dict_agg = {col: "mean" for col in features_selecionadas}
+                if "Média Global" in df_imputado.columns:
+                    dict_agg["Média Global"] = "mean"
+                if "Faltas Médias" in df_imputado.columns:
+                    dict_agg["Faltas Médias"] = "mean"
+                dict_agg[coluna_id] = "count"
+
+                tabela_perfis = df_imputado.groupby(
+                    ["Grupo", "Perfil_Cluster"]
+                ).agg(dict_agg).reset_index()
+                tabela_perfis = tabela_perfis.rename(
+                    columns={
+                        "Grupo": "grupo_cluster",
+                        "Perfil_Cluster": "perfil_cluster",
+                        coluna_id: "Qtd_Alunos",
+                    }
                 )
+
+                tabela_perfis["rotulo_grupo"] = "Grupo " + tabela_perfis[
+                    "grupo_cluster"
+                ].astype(str)
+
+                # Reordena as colunas para ficar idêntico ao layout da sua colega
+                colunas_inicio = ["grupo_cluster", "perfil_cluster", "rotulo_grupo", "Qtd_Alunos"]
+                outras_colunas = [c for c in tabela_perfis.columns if c not in colunas_inicio]
+                tabela_perfis = tabela_perfis[colunas_inicio + outras_colunas]
+
+                # Exibe a tabela estilizada com 3/4 casas decimais
+                st.dataframe(
+                    tabela_perfis.style.format(
+                        {col: "{:.3f}" for col in outras_colunas}
+                    ),
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+            
+
+            
+#            with aba_perfis:
+ #               st.subheader(f"Médias das variáveis por grupo (k = {k_escolhido})")
+  #              st.dataframe(
+   #                 analise_perfis.style.format("{:.2f}"),
+    #                use_container_width=True,
+     #           )
 
             # Aba 4: Dispersão
             with aba_dispersao:
