@@ -260,7 +260,7 @@ if df_raw is not None and not df_raw.empty:
                 st.markdown("**Comparativo de Índices**")
 
                 st.markdown(
-                    """
+                    
                     <style>
                     [data-testid="stHeaderRow"] {
                         text-align: center !important;
@@ -269,7 +269,7 @@ if df_raw is not None and not df_raw.empty:
                         justify-content: center !important;
                     }
                     </style>
-                """,
+                ,
                     unsafe_allow_html=True,
                 )
 
