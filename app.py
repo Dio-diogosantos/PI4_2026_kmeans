@@ -386,13 +386,7 @@ if df_raw is not None and not df_raw.empty:
                 )
                 st.plotly_chart(fig_disp, use_container_width=True)
 
-
-
-
-
-
-
-                
+                #Tabela com os valores médios dos grupos montados
                 st.subheader("Resumo Consolidado dos Perfis")
 
                 # Monta a agregação com a média de todas as variáveis
@@ -432,36 +426,6 @@ if df_raw is not None and not df_raw.empty:
                     hide_index=True,
                 )
 
-            
-
-            # Aba 4: Dispersão
-#            with aba_dispersao:
- #               st.subheader("Gráfico de Dispersão dos Estudantes")
-  #              eixo_x = st.selectbox(
-   #                 "Selecione a variável para o Eixo X:",
-    #                options=colunas_numericas,
-     #               index=colunas_numericas.index("Média Global")
-      #              if "Média Global" in colunas_numericas
-       #             else 0,
-        #        )
-         #       eixo_y = st.selectbox(
-          #          "Selecione a variável para o Eixo Y:",
-           #         options=colunas_numericas,
-            #        index=colunas_numericas.index("Faltas Médias")
-             #       if "Faltas Médias" in colunas_numericas
-              #      else min(1, len(colunas_numericas) - 1),
-               # )
-
-#                fig_disp = px.scatter(
- #                   df_imputado,
-  #                  x=eixo_x,
-   #                 y=eixo_y,
-    #                color="Grupo_Rotulo",
-     #               hover_data=[coluna_id],
-      #              title=f"Perfis de Alunos ({eixo_x} vs {eixo_y})",
-       #             symbol="Grupo_Rotulo",
-        #        )
-         #       st.plotly_chart(fig_disp, use_container_width=True)
 
             # Aba 5: Consulta e Exportação
             with aba_estudantes:
