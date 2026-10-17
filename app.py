@@ -276,7 +276,7 @@ if df_raw is not None and not df_raw.empty:
                             "Davies-Bouldin (↓)", format="%.3f", alignment="center"
                         ),
                         "Calinski-Harabasz (↑)": st.column_config.NumberColumn(
-                            "Calinski-Harabasz (↑)", format="%.1f", alignment="center"
+                            "Calinski-Harabasz (↑)", format="%.3f", alignment="center"
                         ),
                     },
                 )
