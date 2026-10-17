@@ -488,9 +488,10 @@ with aba_socioeconomico:
         "Analise como fatores sociais, econômicos e logísticos se relacionam com as médias e assiduidade dos estudantes."
     )
 
-    # Filtra colunas com poucos valores únicos para análise categórica
+    # 1. Filtra colunas administrativas que devem ser ignoradas
     colunas_excluir_socio = [coluna_id, "Grupo", coluna_ano, coluna_etapa]
-    
+
+    # 2. Filtra colunas categóricas/nominais (com até 5 valores distintos)
     colunas_categoria_possiveis = [
         col
         for col in df_imputado.columns
@@ -521,7 +522,7 @@ with aba_socioeconomico:
         # Gráfico ocupando a largura total
         st.plotly_chart(fig, use_container_width=True)
 
-        # Tabela Resumida
+        # Tabela Resumida das Médias
         st.markdown("**Resumo das Médias por Categoria:**")
         st.dataframe(
             resumo.style.format({c_med: "{:.2f}", c_fal: "{:.2f}"}),
@@ -529,23 +530,25 @@ with aba_socioeconomico:
             hide_index=True,
         )
 
+        st.markdown("---")
 
-st.markdown("### Validação Estatística de Diferença de Médias")
+        # --- AQUI ENTRA A VALIDAÇÃO ESTATÍSTICA (TESTE T OU ANOVA) ---
+        st.markdown("### Validação Estatística de Diferença de Médias")
 
-# Executa o teste estatístico para Média Global e Faltas Médias
-res_media = testar_diferenca_medias(df_imputado, cat_selecionada, c_med)
-res_faltas = testar_diferenca_medias(df_imputado, cat_selecionada, c_fal)
+        res_media = testar_diferenca_medias(df_imputado, cat_selecionada, c_med)
+        res_faltas = testar_diferenca_medias(df_imputado, cat_selecionada, c_fal)
 
-# Exibe os alertas visuais
-if res_media["p_valor"] is not None:
-    if res_media["significativo"]:
-        st.success(f"📊 **Média Global:** {res_media['mensagem']}")
-    else:
-        st.info(f"📊 **Média Global:** {res_media['mensagem']}")
+        if res_media["p_valor"] is None:
+            st.warning(f"⚠️ {res_media['mensagem']}")
+        else:
+            # Média Global
+            if res_media["significativo"]:
+                st.success(f"📊 **Média Global:** {res_media['mensagem']}")
+            else:
+                st.info(f"📊 **Média Global:** {res_media['mensagem']}")
 
-    if res_faltas["significativo"]:
-        st.success(f"📌 **Faltas Médias:** {res_faltas['mensagem']}")
-    else:
-        st.info(f"📌 **Faltas Médias:** {res_faltas['mensagem']}")
-else:
-    st.warning(res_media["mensagem"])
+            # Faltas Médias
+            if res_faltas["significativo"]:
+                st.success(f"📌 **Faltas Médias:** {res_faltas['mensagem']}")
+            else:
+                st.info(f"📌 **Faltas Médias:** {res_faltas['mensagem']}")
