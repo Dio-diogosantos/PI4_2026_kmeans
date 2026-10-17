@@ -1,4 +1,4 @@
-import io
+    import io
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -15,7 +15,9 @@ from sklearn.metrics import (
 from sklearn.preprocessing import StandardScaler
 
 # IMPORTAÇÃO DAS SUAS FUNÇÕES PERSONALIZADAS DO ML_MODELS.PY:
-from ml_models import calcular_metricas_k, sugerir_k_recomendado
+from ml_models import calcular_metricas_k, sugerir_k_recomendado, rotular_perfis
+
+
 
 st.set_page_config(
     page_title="Painel Educacional de Agrupamento", layout="wide"
@@ -200,6 +202,53 @@ if df_raw is not None and not df_raw.empty:
                 tol=0.00005,
                 random_state=42,
             )
+
+            labels = kmeans.fit_predict(X_scaled)
+
+            # 1. Atribui o grupo aos estudantes
+            df_imputado["Grupo"] = labels
+
+            # 2. Mapeia os rótulos pedagógicos (Avançado, Regular, Necessita de Reforço)
+            mapeamento_rotulos = rotular_perfis(
+                df_imputado,
+                nome_col_grupo="Grupo",
+                col_media="Média Global",
+                col_faltas="Faltas Médias",
+            )
+
+            # 3. Cria as colunas explicativas de grupo e perfil
+            df_imputado["Perfil_Cluster"] = df_imputado["Grupo"].map(mapeamento_rotulos)
+            df_imputado["Grupo_Rotulo"] = (
+                "Grupo "
+                + df_imputado["Grupo"].astype(str)
+                + " ("
+                + df_imputado["Perfil_Cluster"]
+                + ")"
+            )
+
+            # 4. Tabela de Perfis
+            dict_agg = {col: "mean" for col in features_selecionadas}
+            if "Média Global" in df_imputado.columns:
+                dict_agg["Média Global"] = "mean"
+            if "Faltas Médias" in df_imputado.columns:
+                dict_agg["Faltas Médias"] = "mean"
+            dict_agg[coluna_id] = "count"
+
+            analise_perfis = (
+                df_imputado.groupby(["Grupo", "Perfil_Cluster"]).agg(dict_agg).reset_index()
+            )
+            analise_perfis = analise_perfis.rename(
+                columns={
+                    "Grupo": "grupo_cluster",
+                    "Perfil_Cluster": "perfil_cluster",
+                    coluna_id: "Qtd_Alunos",
+                }
+            )
+            analise_perfis["rotulo_grupo"] = "Grupo " + analise_perfis[
+                "grupo_cluster"
+            ].astype(str)
+
+"""            
             df_imputado["Grupo"] = kmeans.fit_predict(X_scaled)
             df_imputado["Grupo_Rotulo"] = "Grupo " + df_imputado[
                 "Grupo"
@@ -218,6 +267,8 @@ if df_raw is not None and not df_raw.empty:
                 columns={coluna_id: "Qtd_Alunos"}
             )
 
+
+"""
             # ---------------------------------------------------------
             # 4. ESTRUTURA EM ABAS
             # ---------------------------------------------------------
