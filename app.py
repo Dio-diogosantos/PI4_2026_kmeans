@@ -247,7 +247,7 @@ if df_raw is not None and not df_raw.empty:
 
                 st.info(
                     f"💡 **Recomendação Algorítmica:** Com base na combinação dos índices "
-                    f"(Silhouette, Davies-Bouldin e Calinski-Harabasz), o número ideal sugerido é **k = {k_sugerido}**."
+                    f"(Silhouette, Davies-Bouldin e Calinski-Harabasz), o número ideal sugerido é **k = {k_sugerido}**. Selecione no cursos ao lado a quantidade de agrupamentos de interesse"
                 )
 
                 st.markdown("---")
