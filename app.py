@@ -232,7 +232,7 @@ if df_raw is not None and not df_raw.empty:
 
             # Aba 1: Métricas & Cotovelo
             with aba_decisao:
-                st.subheader("Validação Estatística para Escolha do k")
+                st.subheader("Validação Estatística para Escolha da quantidade de grupos (k)")
                 
                 #Gráfico do Método do Cotovelo
                 st.markdown("**Método do Cotovelo (WCSS)**")
