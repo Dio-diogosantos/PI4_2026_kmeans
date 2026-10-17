@@ -15,7 +15,7 @@ from sklearn.metrics import (
 from sklearn.preprocessing import StandardScaler
 
 # IMPORTAÇÃO DAS SUAS FUNÇÕES PERSONALIZADAS DO ML_MODELS.PY:
-from ml_models import calcular_metricas_k, sugerir_k_recomendado, rotular_perfis,criar_grafico_impacto_categoria
+from ml_models import calcular_metricas_k, sugerir_k_recomendado, rotular_perfis,criar_grafico_impacto_categoria, testar_diferenca_medias
 
 
 
@@ -526,3 +526,24 @@ with aba_socioeconomico:
             use_container_width=True,
             hide_index=True,
         )
+
+
+st.markdown("### Validação Estatística de Diferença de Médias")
+
+# Executa o teste estatístico para Média Global e Faltas Médias
+res_media = testar_diferenca_medias(df_imputado, cat_selecionada, c_med)
+res_faltas = testar_diferenca_medias(df_imputado, cat_selecionada, c_fal)
+
+# Exibe os alertas visuais
+if res_media["p_valor"] is not None:
+    if res_media["significativo"]:
+        st.success(f"📊 **Média Global:** {res_media['mensagem']}")
+    else:
+        st.info(f"📊 **Média Global:** {res_media['mensagem']}")
+
+    if res_faltas["significativo"]:
+        st.success(f"📌 **Faltas Médias:** {res_faltas['mensagem']}")
+    else:
+        st.info(f"📌 **Faltas Médias:** {res_faltas['mensagem']}")
+else:
+    st.warning(res_media["mensagem"])
