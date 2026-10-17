@@ -236,7 +236,7 @@ if df_raw is not None and not df_raw.empty:
                 
                 #Gráfico do Método do Cotovelo
                 st.markdown("**Método do Cotovelo (WCSS)**")
-                fig_cotovelo, ax_cotovelo = plt.subplots(figsize=(2, 1))
+                fig_cotovelo, ax_cotovelo = plt.subplots(figsize=(6, 4))
                 ax_cotovelo.plot(
                     range(1, len(wcss) + 1),
                     wcss,
