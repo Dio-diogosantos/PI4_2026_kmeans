@@ -487,67 +487,70 @@ with aba_socioeconomico:
         "Esta aba analisa como fatores sociais, econômicos e logísticos se relacionam com as médias e assiduidade dos estudantes."
     )
 
-    # Filtra colunas categóricas ou numéricas com poucos valores únicos (binárias/nominais)
+    # Filtra colunas com poucos valores únicos para análise categórica
     colunas_categoria_possiveis = [
         col
-        for col in df_filtrado.columns
-        if df_filtrado[col].nunique() <= 10 and col not in [coluna_id]
+        for col in df_imputado.columns
+        if df_imputado[col].nunique() <= 10 and col not in [coluna_id, "Grupo"]
     ]
 
-    st.markdown("### Seleção de Variáveis Nominais")
-    col_sel1, col_sel2 = st.columns(2)
+    if not colunas_categoria_possiveis:
+        st.warning("Nenhuma variável categórica/nominal encontrada na base.")
+    else:
+        st.markdown("### Seleção de Variáveis Nominais")
+        col_sel1, col_sel2 = st.columns(2)
 
-    with col_sel1:
-        cat_1 = st.selectbox(
-            "Selecione a 1ª Variável para análise:",
-            options=colunas_categoria_possiveis,
-            index=colunas_categoria_possiveis.index("Transporte_1")
-            if "Transporte_1" in colunas_categoria_possiveis
-            else 0,
-        )
+        with col_sel1:
+            cat_1 = st.selectbox(
+                "Selecione a 1ª Variável para análise:",
+                options=colunas_categoria_possiveis,
+                index=colunas_categoria_possiveis.index("Transporte_1")
+                if "Transporte_1" in colunas_categoria_possiveis
+                else 0,
+            )
 
-    with col_sel2:
-        cat_2 = st.selectbox(
-            "Selecione a 2ª Variável para análise:",
-            options=colunas_categoria_possiveis,
-            index=colunas_categoria_possiveis.index("BF_1")
-            if "BF_1" in colunas_categoria_possiveis
-            else min(1, len(colunas_categoria_possiveis) - 1),
-        )
+        with col_sel2:
+            cat_2 = st.selectbox(
+                "Selecione a 2ª Variável para análise:",
+                options=colunas_categoria_possiveis,
+                index=colunas_categoria_possiveis.index("BF_1")
+                if "BF_1" in colunas_categoria_possiveis
+                else min(1, len(colunas_categoria_possiveis) - 1),
+            )
 
-    st.markdown("---")
+        st.markdown("---")
 
-    # Renderização Lado a Lado
-    col_graf1, col_graf2 = st.columns(2)
+        # Renderização Lado a Lado
+        col_graf1, col_graf2 = st.columns(2)
 
-    with col_graf1:
-        st.markdown(f"#### Análise: {cat_1}")
-        fig1, resumo1 = criar_grafico_impacto_categoria(df_filtrado, cat_1)
-        st.plotly_chart(
-            fig1, use_container_width=True, key=f"grafico_impacto_{cat_1}"
-        )
+        with col_graf1:
+            st.markdown(f"#### Análise: {cat_1}")
+            fig1, resumo1, c_med1, c_fal1 = criar_grafico_impacto_categoria(
+                df_imputado, cat_1
+            )
+            st.plotly_chart(
+                fig1, use_container_width=True, key=f"grafico_impacto_{cat_1}"
+            )
 
-        st.markdown("**Resumo Médio:**")
-        st.dataframe(
-            resumo1.style.format(
-                {"Média Global": "{:.2f}", "Faltas Médias": "{:.2f}"}
-            ),
-            use_container_width=True,
-            hide_index=True,
-        )
+            st.markdown("**Resumo Médio:**")
+            st.dataframe(
+                resumo1.style.format({c_med1: "{:.2f}", c_fal1: "{:.2f}"}),
+                use_container_width=True,
+                hide_index=True,
+            )
 
-    with col_graf2:
-        st.markdown(f"#### Análise: {cat_2}")
-        fig2, resumo2 = criar_grafico_impacto_categoria(df_filtrado, cat_2)
-        st.plotly_chart(
-            fig2, use_container_width=True, key=f"grafico_impacto_{cat_2}"
-        )
+        with col_graf2:
+            st.markdown(f"#### Análise: {cat_2}")
+            fig2, resumo2, c_med2, c_fal2 = criar_grafico_impacto_categoria(
+                df_imputado, cat_2
+            )
+            st.plotly_chart(
+                fig2, use_container_width=True, key=f"grafico_impacto_{cat_2}"
+            )
 
-        st.markdown("**Resumo Médio:**")
-        st.dataframe(
-            resumo2.style.format(
-                {"Média Global": "{:.2f}", "Faltas Médias": "{:.2f}"}
-            ),
-            use_container_width=True,
-            hide_index=True,
-        )
+            st.markdown("**Resumo Médio:**")
+            st.dataframe(
+                resumo2.style.format({c_med2: "{:.2f}", c_fal2: "{:.2f}"}),
+                use_container_width=True,
+                hide_index=True,
+            )
