@@ -251,7 +251,6 @@ def testar_diferenca_medias(
         return {
             "p_valor": None,
             "significativo": False,
-            "teste_utilizado": "Nenhum",
             "mensagem": f"Não foi possível realizar o teste: no recorte atual, todos os alunos possuem o mesmo valor para **'{coluna_categoria}'**.",
         }
 
@@ -271,28 +270,18 @@ def testar_diferenca_medias(
         m0, m1 = g0.mean(), g1.mean()
 
         if significativo:
-            msg = (
-                f"**Teste t (2 grupos):** Diferença estatisticamente significativa "
-                f"($p = {p_valor:.4f} < 0.05$). Média '{grupos_unicos[0]}': {m0:.2f} (N={n0}) vs "
-                f"Média '{grupos_unicos[1]}': {m1:.2f} (N={n1})."
-            )
+            msg = f"**Teste t (2 grupos):** Diferença estatisticamente significativa ($p = {p_valor:.4f} < 0.05$). Média '{grupos_unicos[0]}': {m0:.2f} (N={n0}) vs Média '{grupos_unicos[1]}': {m1:.2f} (N={n1})."
         else:
-            msg = (
-                f"**Teste t (2 grupos):** Não há diferença estatisticamente significativa "
-                f"($p = {p_valor:.4f} \ge 0.05$). Média '{grupos_unicos[0]}': {m0:.2f} (N={n0}) vs "
-                f"Média '{grupos_unicos[1]}': {m1:.2f} (N={n1})."
-            )
+            msg = f"**Teste t (2 grupos):** Não há diferença estatisticamente significativa ($p = {p_valor:.4f} \ge 0.05$). Média '{grupos_unicos[0]}': {m0:.2f} (N={n0}) vs Média '{grupos_unicos[1]}': {m1:.2f} (N={n1})."
 
         return {
             "p_valor": p_valor,
             "significativo": significativo,
-            "teste_utilizado": "Teste t",
             "mensagem": msg,
         }
 
     # 3. CASO MULTICLASSE (3 ou mais Grupos): ANOVA One-Way
     else:
-        # Separa as amostras de cada grupo para a ANOVA
         amostras_por_grupo = [
             df_valido[df_valido[coluna_categoria] == val][coluna_metrica]
             for val in grupos_unicos
@@ -302,21 +291,12 @@ def testar_diferenca_medias(
         significativo = p_valor < 0.05
 
         if significativo:
-            msg = (
-                f"**ANOVA One-Way ({qtd_grupos} grupos):** Existe diferença estatisticamente significativa "
-                f"em pelo menos um dos grupos de **'{coluna_categoria}'** para o indicador **{coluna_metrica}** "
-                f"($F = {stat:.2f}$, $p = {p_valor:.4f} < 0.05$)."
-            )
+            msg = f"**ANOVA One-Way ({qtd_grupos} grupos):** Existe diferença estatisticamente significativa entre pelo menos dois dos grupos de **'{coluna_categoria}'** para o indicador **{coluna_metrica}** ($F = {stat:.2f}$, $p = {p_valor:.4f} < 0.05$)."
         else:
-            msg = (
-                f"**ANOVA One-Way ({qtd_grupos} grupos):** Não foi encontrada diferença estatisticamente significativa "
-                f"entre os {qtd_grupos} grupos no indicador **{coluna_metrica}** "
-                f"($F = {stat:.2f}$, $p = {p_valor:.4f} \ge 0.05$)."
-            )
+            msg = f"**ANOVA One-Way ({qtd_grupos} grupos):** Não foi encontrada diferença estatisticamente significativa entre os {qtd_grupos} grupos no indicador **{coluna_metrica}** ($F = {stat:.2f}$, $p = {p_valor:.4f} \ge 0.05$)."
 
         return {
             "p_valor": p_valor,
             "significativo": significativo,
-            "teste_utilizado": "ANOVA",
             "mensagem": msg,
         }
