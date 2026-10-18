@@ -110,8 +110,7 @@ if df_raw is not None and not df_raw.empty:
         coluna_id,
         coluna_ano,
         coluna_etapa,
-        "Média Global",
-        "Faltas Médias",
+       
     ]
     features_sugeridas = [
         c for c in colunas_numericas if c not in colunas_excluir_padrao
