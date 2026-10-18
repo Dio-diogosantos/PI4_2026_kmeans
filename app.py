@@ -444,13 +444,13 @@ if df_raw is not None and not df_raw.empty:
                 alunos_filtrados = df_imputado[df_imputado["Grupo"] == grupo_filtro]
 
                 
-                grupo_filtro = st.selectbox(
-                    "Selecione o Grupo:",
-                    options=sorted(df_imputado["Grupo"].unique()),
-                )
-                alunos_filtrados = df_imputado[
-                    df_imputado["Grupo"] == grupo_filtro
-                ]
+#                grupo_filtro = st.selectbox(
+ #                   "Selecione o Grupo:",
+  #                  options=sorted(df_imputado["Grupo"].unique()),
+   #             )
+    #            alunos_filtrados = df_imputado[
+     #               df_imputado["Grupo"] == grupo_filtro
+      #          ]
 
                 cols_mostrar = [
                     c
