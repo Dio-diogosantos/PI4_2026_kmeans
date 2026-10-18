@@ -441,7 +441,7 @@ if df_raw is not None and not df_raw.empty:
                     format_func=lambda g: f"Grupo {g} - {mapa_rotulos.get(g, '')}",
                 )
 
-    alunos_filtrados = df_imputado[df_imputado["Grupo"] == grupo_filtro]
+                alunos_filtrados = df_imputado[df_imputado["Grupo"] == grupo_filtro]
 
                 
                 grupo_filtro = st.selectbox(
