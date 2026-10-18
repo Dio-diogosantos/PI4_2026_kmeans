@@ -438,6 +438,15 @@ if df_raw is not None and not df_raw.empty:
                 grupo_filtro = st.selectbox(
                     "Selecione o Grupo:",
                     options=sorted(df_imputado["Grupo"].unique()),
+                    format_func=lambda g: f"Grupo {g} - {mapa_rotulos.get(g, '')}",
+                )
+
+    alunos_filtrados = df_imputado[df_imputado["Grupo"] == grupo_filtro]
+
+                
+                grupo_filtro = st.selectbox(
+                    "Selecione o Grupo:",
+                    options=sorted(df_imputado["Grupo"].unique()),
                 )
                 alunos_filtrados = df_imputado[
                     df_imputado["Grupo"] == grupo_filtro
