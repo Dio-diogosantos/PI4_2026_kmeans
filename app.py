@@ -431,6 +431,10 @@ if df_raw is not None and not df_raw.empty:
             # Aba 4: Consulta e Exportação
             with aba_estudantes:
                 st.subheader("Lista de Estudantes e Exportação")
+
+                mapa_rotulos = (
+                    df_imputado.groupby("Grupo")["Perfil_Cluster"].first().to_dict()
+                )
                 grupo_filtro = st.selectbox(
                     "Selecione o Grupo:",
                     options=sorted(df_imputado["Grupo"].unique()),
