@@ -125,12 +125,12 @@ if df_raw is not None and not df_raw.empty:
     )
 
     if not features_selecionadas:
-    st.warning(
-        "⚠️ **Nenhuma variável foi selecionada para o agrupamento!**\n\n"
-        "Por favor, selecione pelo menos uma variável no menu lateral "
-        "('Selecione as variáveis para o agrupamento') para gerar a análise."
-    )
-    st.stop()  
+        st.warning(
+            "⚠️ **Nenhuma variável foi selecionada para o agrupamento!**\n\n"
+            "Por favor, selecione pelo menos uma variável no menu lateral "
+            "('Selecione as variáveis para o agrupamento') para gerar a análise."
+        )
+        st.stop()  
 
     k_escolhido = st.sidebar.slider(
         "Quantidade de grupos (k):",
@@ -140,13 +140,6 @@ if df_raw is not None and not df_raw.empty:
         step=1,
     )
 
-        if not features_selecionadas:
-    st.warning(
-        "⚠️ **Nenhuma variável foi selecionada para o agrupamento!**\n\n"
-        "Por favor, selecione pelo menos uma variável no menu lateral "
-        "('Selecione as variáveis para o agrupamento') para gerar a análise."
-    )
-    st.stop()  # Interrompe a execução aqui, evitando erros de NameError nas abas!
 
     # ---------------------------------------------------------
     # 3. VALIDAÇÕES E PROCESSAMENTO DOS DADOS
