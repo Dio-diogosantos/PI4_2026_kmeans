@@ -150,7 +150,7 @@ if df_raw is not None and not df_raw.empty:
         )
     elif len(features_selecionadas) < 2:
         st.warning(
-            "Selecione pelo menos 2 variáveis numéricas na barra lateral para realizar o agrupamento."
+            "Selecione pelo menos 2 variáveis numéricas na barra lateral  ('Selecione as variáveis para o agrupamento') para realizar o agrupamento."
         )
         st.stop()
     else:
