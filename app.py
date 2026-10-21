@@ -127,7 +127,7 @@ if df_raw is not None and not df_raw.empty:
     if not features_selecionadas:
         st.warning(
             "⚠️ **Nenhuma variável foi selecionada para o agrupamento!**\n\n"
-            "Por favor, selecione pelo menos uma variável no menu lateral "
+            "Por favor, selecione pelo menos duas variáveis no menu lateral "
             "('Selecione as variáveis para o agrupamento') para gerar a análise."
         )
         st.stop()  
