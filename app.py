@@ -152,6 +152,7 @@ if df_raw is not None and not df_raw.empty:
         st.warning(
             "Selecione pelo menos 2 variáveis numéricas na barra lateral para realizar o agrupamento."
         )
+        st.stop()
     else:
         try:
             # Imputação e Padronização
