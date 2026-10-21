@@ -123,6 +123,14 @@ if df_raw is not None and not df_raw.empty:
         default=[],  # <-- Deixa o campo zerado/vazio ao entrar na página!        
         placeholder="Escolha as variáveis",
     )
+
+    if not features_selecionadas:
+    st.warning(
+        "⚠️ **Nenhuma variável foi selecionada para o agrupamento!**\n\n"
+        "Por favor, selecione pelo menos uma variável no menu lateral "
+        "('Selecione as variáveis para o agrupamento') para gerar a análise."
+    )
+    st.stop()  # Interrompe a execução aqui, evitando erros de NameError nas abas!
       
 
     k_escolhido = st.sidebar.slider(
