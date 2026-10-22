@@ -117,20 +117,43 @@ if df_raw is not None and not df_raw.empty:
     ]
 
 
+    features_padrao = [
+        col
+        for col in features_sugeridas
+        if col in ["Transporte_1", "BF_1", "Média Global", "Faltas Médias"]
+        or col.startswith("M_")
+        or col.startswith("F_")
+    ]
+
+    # 2. Configura o multiselect passando a lista 'features_padrao' no parâmetro default
     features_selecionadas = st.sidebar.multiselect(
         "Selecione as variáveis para o agrupamento:",
-        options=features_sugeridas,  # <-- Garante que colunas selecionadas anteriormente fiquem de fora!
-        default=[],  # <-- Deixa o campo zerado/vazio ao entrar na página!        
+        options=features_sugeridas,
+        default=features_padrao,  # <-- Agora já inicia pré-preenchido!
         placeholder="Escolha as variáveis",
     )
 
-    if not features_selecionadas:
+    # 3. Trava de segurança para no mínimo 2 variáveis
+    if len(features_selecionadas) < 2:
         st.warning(
-            "⚠️ **Nenhuma variável foi selecionada para o agrupamento!**\n\n"
-            "Por favor, selecione pelo menos duas variáveis no menu lateral "
-            "('Selecione as variáveis para o agrupamento') para gerar a análise."
+            "⚠️ **Selecione pelo menos 2 variáveis numéricas na barra lateral para realizar o agrupamento.**"
         )
-        st.stop()  
+        st.stop()
+
+#    features_selecionadas = st.sidebar.multiselect(
+#        "Selecione as variáveis para o agrupamento:",
+#        options=features_sugeridas,  # <-- Garante que colunas selecionadas anteriormente fiquem de fora!
+#        default=[],  # <-- Deixa o campo zerado/vazio ao entrar na página!        
+#        placeholder="Escolha as variáveis",
+#    )
+
+#    if not features_selecionadas:
+#        st.warning(
+#            "⚠️ **Nenhuma variável foi selecionada para o agrupamento!**\n\n"
+#            "Por favor, selecione pelo menos duas variáveis no menu lateral "
+#            "('Selecione as variáveis para o agrupamento') para gerar a análise."
+#        )
+#        st.stop()  
 
     k_escolhido = st.sidebar.slider(
         "Quantidade de grupos (k):",
