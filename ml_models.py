@@ -7,7 +7,7 @@ from sklearn.metrics import (
 )
 
 
-def calcular_metricas_k(X_scaled, max_k=5) -> pd.DataFrame:
+def calcular_metricas_k(X_scaled, max_k=10) -> pd.DataFrame:
     """Calcula as métricas de validação estatística para valores de k de 2 até max_k."""
     metricas = []
     for k_val in range(2, max_k + 1):
