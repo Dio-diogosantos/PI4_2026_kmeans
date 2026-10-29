@@ -158,7 +158,7 @@ if df_raw is not None and not df_raw.empty:
     k_escolhido = st.sidebar.slider(
         "Quantidade de grupos (k):",
         min_value=2,
-        max_value=6,
+        max_value=10,
         value=3,
         step=1,
     )
